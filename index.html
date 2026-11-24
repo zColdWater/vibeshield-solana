@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VibeShield Solana — Token-2022, BPF Program & Blinks Security Scanner</title>
+  <meta name="description" content="Zero-dependency open-source Solana Mainnet pre-launch security scanner for SPL Token-2022 extensions, BPF Upgradeable Program authorities, Solana Actions/Blinks, and x402 Solana Pay treasuries." />
+  <style>
+    :root {
+      --bg: #070b12;
+      --panel: #0e1624;
+      --panel-2: #131e31;
+      --border: rgba(148, 163, 184, 0.16);
+      --sol-green: #14f195;
+      --sol-purple: #9945ff;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --pass: #10b981;
+      --low: #eab308;
+      --med: #f97316;
+      --high: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at 15% 0%, rgba(153,69,255,0.16), transparent 42%),
+                  radial-gradient(circle at 85% 0%, rgba(20,241,149,0.12), transparent 40%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.55;
+      padding: 28px 18px 64px;
+    }
+    .wrap { max-width: 980px; margin: 0 auto; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+      margin-bottom: 30px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; letter-spacing: -0.02em; }
+    .dot { width: 11px; height: 11px; border-radius: 50%; background: linear-gradient(135deg, var(--sol-green), var(--sol-purple)); box-shadow: 0 0 14px rgba(20,241,149,0.65); }
+    .navlinks { display: flex; gap: 10px; flex-wrap: wrap; }
+    .navlinks a {
+      color: var(--muted); text-decoration: none; font-size: 13px; padding: 6px 12px;
+      border-radius: 999px; border: 1px solid var(--border); background: rgba(15,23,42,0.65);
+    }
+    .navlinks a:hover { color: var(--text); border-color: rgba(20,241,149,0.45); }
+    .hero { margin-bottom: 24px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+      color: var(--sol-green); background: rgba(20,241,149,0.09); border: 1px solid rgba(20,241,149,0.28);
+      padding: 4px 11px; border-radius: 999px; margin-bottom: 12px;
+    }
+    h1 { font-size: clamp(26px, 4vw, 38px); letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 10px; }
+    .sub { color: var(--muted); font-size: 15px; max-width: 760px; }
+    .scanner-card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+      padding: 20px; margin-bottom: 20px; box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+    }
+    .input-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    input[type="text"] {
+      flex: 1; min-width: 240px; background: #060a11; border: 1px solid rgba(148,163,184,0.28);
+      color: var(--text); border-radius: 10px; padding: 13px 15px; font-size: 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    input[type="text"]:focus { outline: none; border-color: var(--sol-green); }
+    button.primary {
+      background: linear-gradient(135deg, var(--sol-green), #0fd982); color: #04130c;
+      font-weight: 800; font-size: 14px; border: none; border-radius: 10px; padding: 13px 22px;
+      cursor: pointer; transition: transform 0.12s ease;
+    }
+    button.primary:hover { transform: translateY(-1px); }
+    button.primary:disabled { opacity: 0.55; cursor: wait; }
+    .presets { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+    .preset-btn {
+      background: var(--panel-2); color: #cbd5e1; border: 1px solid var(--border);
+      border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer;
+    }
+    .preset-btn:hover { border-color: var(--sol-purple); color: #fff; }
+    .result-box { display: none; margin-top: 18px; }
+    .score-banner {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+      background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px 18px; margin-bottom: 14px;
+    }
+    .score-num { font-size: 32px; font-weight: 800; letter-spacing: -0.03em; }
+    .meta-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-bottom: 14px;
+    }
+    .meta-item {
+      background: rgba(6,10,17,0.65); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+    }
+    .meta-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    .meta-val {
+      font-size: 13px; font-weight: 600; margin-top: 3px; word-break: break-all;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .finding {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px 16px; margin-bottom: 10px;
+    }
+    .finding-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; font-weight: 700; font-size: 14px; }
+    .sev {
+      font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px; letter-spacing: 0.04em;
+    }
+    .sev-PASS { background: rgba(16,185,129,0.16); color: #34d399; }
+    .sev-INFO { background: rgba(56,189,248,0.16); color: #38bdf8; }
+    .sev-LOW { background: rgba(234,179,8,0.18); color: #facc15; }
+    .sev-MEDIUM { background: rgba(249,115,22,0.18); color: #fb923c; }
+    .sev-HIGH, .sev-CRITICAL { background: rgba(239,68,68,0.2); color: #f87171; }
+    .finding-detail { color: #cbd5e1; font-size: 13px; margin-bottom: 6px; word-break: break-word; }
+    .finding-fix { color: var(--sol-green); font-size: 12.5px; background: rgba(20,241,149,0.06); padding: 7px 10px; border-radius: 8px; }
+    .cli-card {
+      background: #060a11; border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; margin-top: 22px;
+    }
+    pre {
+      overflow-x: auto; font-size: 12.5px; color: #e2e8f0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <div class="brand"><span class="dot"></span> VibeShield Solana <span style="font-size:12px;color:var(--muted);font-weight:600;">v1.0.0 Public Good</span></div>
+      <nav class="navlinks">
+        <a href="https://github.com/zColdWater/vibeshield-solana" target="_blank" rel="noopener">GitHub Repo (MIT) ↗</a>
+        <a href="https://github.com/zColdWater/mcp-launch-audit" target="_blank" rel="noopener">Official MCP Server ↗</a>
+        <a href="https://vibe-checker.appwrite.network" target="_blank" rel="noopener">Full Web App Scanner ↗</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div class="pill">⚡ Live Solana Mainnet JSON-RPC · Zero Dependencies · 100% Open Source</div>
+      <h1>Pre-Launch Security Guardrails for Solana Token-2022, Programs &amp; x402</h1>
+      <p class="sub">Inspect live Solana Mainnet accounts directly from your browser: decode SPL Token-2022 extension hazards (<code>PermanentDelegate</code>, <code>TransferHook</code>, <code>TransferFeeConfig</code>), 45-byte <code>BPFLoaderUpgradeab1e</code> upgrade authorities, and treasury USDC ATA readiness.</p>
+    </section>
+
+    <section class="scanner-card">
+      <div class="input-row">
+        <input id="targetInput" type="text" value="2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo" placeholder="Enter Solana Mint, Program ID, or Treasury Wallet..." />
+        <button id="scanBtn" class="primary" onclick="runScan()">Scan Mainnet RPC</button>
+      </div>
+      <div class="presets">
+        <span>Live Presets:</span>
+        <button class="preset-btn" onclick="pick('2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo')">PayPal USD (Token-2022 Extensions)</button>
+        <button class="preset-btn" onclick="pick('JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4')">Jupiter v6 (BPF Upgradeable Program)</button>
+        <button class="preset-btn" onclick="pick('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')">Circle USDC (SPL Token)</button>
+        <button class="preset-btn" onclick="pick('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')">SPL Token Program</button>
+      </div>
+
+      <div id="resultBox" class="result-box">
+        <div class="score-banner">
+          <div>
+            <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;">Solana Security Posture</div>
+            <div id="scoreText" class="score-num">—</div>
+          </div>
+          <div style="text-align:right;">
+            <div id="kindBadge" style="font-size:13px;font-weight:700;color:var(--sol-green);">—</div>
+            <div id="slotText" style="font-size:12px;color:var(--muted);">—</div>
+          </div>
+        </div>
+        <div id="metaGrid" class="meta-grid"></div>
+        <div id="findingsList"></div>
+      </div>
+    </section>
+
+    <section class="cli-card">
+      <strong style="font-size:13px;color:var(--sol-green);">Run Locally in CI/CD or Cursor / Claude Code (Zero Dependencies):</strong>
+      <pre>git clone https://github.com/zColdWater/vibeshield-solana.git
+node vibeshield-solana/bin/vibeshield-solana.mjs 2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo --json</pre>
+    </section>
+  </div>
+
+  <script>
+    const RPCS = [
+      "https://solana-rpc.publicnode.com",
+      "https://api.mainnet-beta.solana.com"
+    ];
+    const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+    const PROGRAMS = {
+      SPL_TOKEN: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      TOKEN_2022: "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+      BPF_UPG: "BPFLoaderUpgradeab1e11111111111111111111111"
+    };
+
+    function encodeB58(bytes) {
+      let z = 0;
+      while (z < bytes.length && bytes[z] === 0) z++;
+      if (z === bytes.length) return "1".repeat(z);
+      const d = [];
+      for (let i = z; i < bytes.length; i++) {
+        let c = bytes[i];
+        for (let j = 0; j < d.length; j++) { c += d[j] << 8; d[j] = c % 58; c = (c / 58) | 0; }
+        while (c > 0) { d.push(c % 58); c = (c / 58) | 0; }
+      }
+      let s = "1".repeat(z);
+      for (let i = d.length - 1; i >= 0; i--) s += B58[d[i]];
+      return s;
+    }
+
+    async function rpc(method, params) {
+      let lastErr;
+      for (const u of RPCS) {
+        try {
+          const r = await fetch(u, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params })
+          });
+          const j = await r.json();
+          if (j.error) throw new Error(j.error.message);
+          return { result: j.result, rpcUsed: u };
+        } catch (e) { lastErr = e; }
+      }
+      throw lastErr;
+    }
+
+    function esc(s) {
+      return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+    }
+
+    function pick(val) {
+      document.getElementById("targetInput").value = val;
+      runScan();
+    }
+
+    async function runScan() {
+      const btn = document.getElementById("scanBtn");
+      const target = document.getElementById("targetInput").value.trim();
+      if (!target) return;
+      btn.disabled = true;
+      btn.textContent = "Scanning Mainnet...";
+      const t0 = performance.now();
+      try {
+        const { result: resp, rpcUsed } = await rpc("getAccountInfo", [target, { encoding: "jsonParsed", commitment: "confirmed" }]);
+        const slot = resp?.context?.slot;
+        const val = resp?.value;
+        const findings = [];
+        const meta = {};
+        let kind = "Solana Account";
+
+        if (!val) {
+          kind = "Uninitialized Account";
+          meta["Status"] = "0 lamports (Not Initialized)";
+          findings.push({
+            sev: "HIGH", id: "SOL-ACCT-001", title: "Account Not Initialized on Solana Mainnet",
+            detail: `Address ${target} has no on-chain state at slot ${slot}.`,
+            fix: "Fund above rent-exempt minimum or initialize Associated Token Accounts via createAssociatedTokenAccountIdempotent."
+          });
+        } else if ((val.owner === PROGRAMS.SPL_TOKEN || val.owner === PROGRAMS.TOKEN_2022) && val.data?.parsed?.type === "mint") {
+          const is22 = val.owner === PROGRAMS.TOKEN_2022;
+          const info = val.data.parsed.info || {};
+          const exts = info.extensions || [];
+          kind = is22 ? "SPL Token-2022 Mint" : "SPL Token Mint";
+          meta["Program"] = is22 ? "Token-2022" : "SPL Token v1";
+          meta["Decimals"] = info.decimals;
+          meta["Mint Authority"] = info.mintAuthority || "Revoked (Immutable Supply)";
+          meta["Freeze Authority"] = info.freezeAuthority || "Revoked";
+          if (is22) meta["Extensions"] = exts.map(e => e.extension).join(", ") || "None";
+
+          if (info.mintAuthority) {
+            findings.push({ sev: "MEDIUM", id: "SOL-MINT-001", title: "Active Mint Authority Retained", detail: `mintAuthority (${info.mintAuthority}) can mint additional supply.`, fix: "Verify Squads v4 multisig custody or revoke mintAuthority for fixed-supply tokens." });
+          } else {
+            findings.push({ sev: "PASS", id: "SOL-MINT-000", title: "Mint Authority Permanently Revoked", detail: "Token supply cannot be inflated.", fix: "" });
+          }
+          if (info.freezeAuthority) {
+            findings.push({ sev: "MEDIUM", id: "SOL-MINT-002", title: "Active Freeze Authority Retained", detail: `freezeAuthority (${info.freezeAuthority}) can freeze individual holder ATAs.`, fix: "Expected for regulated stablecoins; revoke before permissionless DeFi pool launch." });
+          }
+          for (const ext of exts) {
+            const st = ext.state || {};
+            if (ext.extension === "permanentDelegate" && st.delegate) {
+              findings.push({ sev: "HIGH", id: "SOL-T22-001", title: "Token-2022 Permanent Delegate Enabled", detail: `permanentDelegate (${st.delegate}) can transfer or burn tokens from ANY holder ATA without holder signature.`, fix: "Surface prominent warning in wallet/DEX UIs and exclude unverified PermanentDelegate mints from lending collateral." });
+            } else if (ext.extension === "transferHook" && st.programId) {
+              findings.push({ sev: "HIGH", id: "SOL-T22-002", title: "Token-2022 Custom Transfer Hook Attached", detail: `Every transfer CPIs into ${st.programId}.`, fix: "Audit TransferHook upgradeAuthority to prevent transfer halting." });
+            } else if (ext.extension === "transferFeeConfig") {
+              const bps = st.newerTransferFee?.transferFeeBasisPoints ?? 0;
+              findings.push({ sev: bps > 0 ? "MEDIUM" : "LOW", id: "SOL-T22-003", title: `Token-2022 Transfer Fee Extension (${bps} bps)`, detail: `feeConfigAuthority=${st.transferFeeConfigAuthority || "none"}.`, fix: "Measure post-transfer vault balance deltas rather than assuming 1:1 received amounts." });
+            } else if (ext.extension === "mintCloseAuthority" && st.closeAuthority) {
+              findings.push({ sev: "LOW", id: "SOL-T22-005", title: "Token-2022 Mint Close Authority Present", detail: `closeAuthority=${st.closeAuthority}.`, fix: "Ensure PDAs handle mint closure gracefully if supply hits zero." });
+            } else if (ext.extension === "confidentialTransferMint") {
+              findings.push({ sev: "INFO", id: "SOL-T22-006", title: "Token-2022 Confidential Transfers Configured", detail: `authority=${st.authority || "none"}, autoApprove=${Boolean(st.autoApproveNewAccounts)}.`, fix: "Ensure analytics handle encrypted confidential balances." });
+            }
+          }
+        } else if (val.owner === PROGRAMS.BPF_UPG && val.data?.parsed?.type === "program") {
+          kind = "BPF Upgradeable Program";
+          const pdAddr = val.data.parsed.info.programData;
+          const { result: sliceResp } = await rpc("getAccountInfo", [pdAddr, { encoding: "base64", dataSlice: { offset: 0, length: 45 }, commitment: "confirmed" }]);
+          const raw = Uint8Array.from(atob(sliceResp.value.data[0]), c => c.charCodeAt(0));
+          const dv = new DataView(raw.buffer);
+          const depSlot = Number(dv.getBigUint64(4, true));
+          const hasAuth = raw[12] === 1;
+          const upgAuth = hasAuth ? encodeB58(raw.slice(13, 45)) : null;
+          meta["ProgramData"] = pdAddr;
+          meta["Last Deployed Slot"] = depSlot.toLocaleString();
+          meta["Upgrade Authority"] = upgAuth || "None (Immutable)";
+          if (hasAuth) {
+            findings.push({ sev: "MEDIUM", id: "SOL-PROG-001", title: "Program Bytecode Is Upgradeable", detail: `Decoded 45-byte ProgramData header: upgradeAuthority=${upgAuth} (last deployed slot ${depSlot}).`, fix: "Place upgradeAuthority behind a threshold Squads v4 multisig + publish solana-verify reproducible build." });
+          } else {
+            findings.push({ sev: "PASS", id: "SOL-PROG-000", title: "Program Is Permanently Immutable", detail: "upgradeAuthority is None; bytecode cannot be altered.", fix: "" });
+          }
+        } else {
+          kind = val.executable ? "Native / Loader v2 Program" : "Wallet / Treasury / PDA";
+          meta["Owner Program"] = val.owner;
+          meta["SOL Balance"] = (val.lamports / 1e9).toFixed(6) + " SOL";
+          meta["Executable"] = String(Boolean(val.executable));
+          findings.push({ sev: "PASS", id: "SOL-ACCT-OK", title: "Initialized On-Chain Account Verified", detail: `Account holds ${(val.lamports / 1e9).toFixed(6)} SOL under owner ${val.owner}.`, fix: "" });
+        }
+
+        let pen = 0;
+        for (const f of findings) pen += f.sev === "CRITICAL" ? 28 : f.sev === "HIGH" ? 16 : f.sev === "MEDIUM" ? 8 : f.sev === "LOW" ? 3 : 0;
+        const score = Math.max(0, 100 - pen);
+        const grade = score >= 90 ? "A" : score >= 80 ? "B" : score >= 65 ? "C" : "D";
+
+        document.getElementById("resultBox").style.display = "block";
+        document.getElementById("scoreText").textContent = `${score}/100 (Grade ${grade})`;
+        document.getElementById("kindBadge").textContent = kind;
+        document.getElementById("slotText").textContent = `Slot ${slot?.toLocaleString() || "—"} · ${Math.round(performance.now() - t0)}ms · ${new URL(rpcUsed).host}`;
+        document.getElementById("metaGrid").innerHTML = Object.entries(meta).map(([k, v]) =>
+          `<div class="meta-item"><div class="meta-label">${esc(k)}</div><div class="meta-val">${esc(v)}</div></div>`
+        ).join("");
+        document.getElementById("findingsList").innerHTML = findings.map(f =>
+          `<div class="finding">
+            <div class="finding-head"><span class="sev sev-${esc(f.sev)}">${esc(f.sev)}</span> <span>${esc(f.id)} — ${esc(f.title)}</span></div>
+            <div class="finding-detail">${esc(f.detail)}</div>
+            ${f.fix ? `<div class="finding-fix"><strong>Remediation:</strong> ${esc(f.fix)}</div>` : ""}
+          </div>`
+        ).join("");
+      } catch (err) {
+        alert("RPC Scan Error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Scan Mainnet RPC";
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => runScan());
+  </script>
+</body>
+</html>

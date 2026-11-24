@@ -1,0 +1,40 @@
+{
+  "name": "vibeshield-solana",
+  "version": "1.0.0",
+  "description": "Zero-dependency Solana Mainnet pre-launch security scanner for SPL Token-2022 extensions, BPF Upgradeable Program authorities, Solana Actions/Blinks CORS & TLS, and x402 Solana Pay treasury readiness.",
+  "type": "module",
+  "bin": {
+    "vibeshield-solana": "./bin/vibeshield-solana.mjs"
+  },
+  "main": "./src/scanner.mjs",
+  "exports": {
+    ".": "./src/scanner.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/smoke.test.mjs",
+    "scan:pyusd": "node bin/vibeshield-solana.mjs 2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo",
+    "scan:jup": "node bin/vibeshield-solana.mjs JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"
+  },
+  "keywords": [
+    "solana",
+    "security",
+    "token-2022",
+    "spl-token",
+    "blinks",
+    "solana-actions",
+    "x402",
+    "anchor",
+    "mcp",
+    "audit"
+  ],
+  "author": "OmniForge Security Lab (zColdWater)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zColdWater/vibeshield-solana.git"
+  },
+  "homepage": "https://zcoldwater.github.io/vibeshield-solana/",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
