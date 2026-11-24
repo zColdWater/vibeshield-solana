@@ -1,5 +1,7 @@
 # VibeShield Solana Edition (`vibeshield-solana`)
 
+![VibeShield Solana Cover](./assets/cover.png)
+
 **Zero-dependency Solana Mainnet pre-launch security scanner** for **SPL Token-2022 extensions**, **BPF Upgradeable Program authorities**, **Solana Actions & Blinks (`actions.json`)**, and **x402 Solana Pay treasury ATA readiness**.
 
 - **Live Zero-Install Browser Scanner**: <https://zcoldwater.github.io/vibeshield-solana/>
